@@ -146,9 +146,6 @@ func getDownloadUrl(video VideoBaseInfo, bvid string) ([]string, error) {
 	}
 
 	fmt.Printf("成功获取 %d 个下载链接（每个CID一个）\n", len(downloadUrls))
-	fmt.Printf("下载链接：%s\n", downloadUrls)
-	fmt.Printf("下载链接1：%s\n", downloadUrls[0])
-	fmt.Printf("下载链接2：%s\n", downloadUrls[1])
 	return downloadUrls, nil
 }
 
@@ -169,9 +166,7 @@ func downloadVideo(video VideoBaseInfo, bvid string) error {
 	fmt.Printf("成功获取 %d 个下载链接\n", len(urls))
 
 	for i := 0; i < len(urls); i++ {
-		fmt.Println("url[1]", urls[1])
 		fmt.Printf("开始下载第 %d 个文件\n", i+1)
-		fmt.Printf("Url: %s\n", urls[i])
 
 		// 创建支持重定向的 HTTP 客户端
 		client := &http.Client{
