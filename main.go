@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-const AppVersion = "1.0.0"
+const AppVersion = "0.1.0"
 
 type VideoBaseInfo struct {
 	Data []struct {
@@ -72,7 +72,6 @@ func downloadAction(c *cli.Context) error {
 }
 
 func startDownload(bvid string) error {
-
 	video, err := getVideoBaseInfo(bvid)
 	if err != nil {
 		return fmt.Errorf("获取视频信息失败：%w", err)
@@ -114,7 +113,6 @@ func getVideoBaseInfo(bvid string) (VideoBaseInfo, error) {
 }
 
 func getDownloadUrl(video VideoBaseInfo, bvid string) ([]string, error) {
-
 	cid := make([]int, len(video.Data))
 	for i := 0; i < len(video.Data); i++ {
 		cid[i] = video.Data[i].Cid
@@ -145,12 +143,10 @@ func getDownloadUrl(video VideoBaseInfo, bvid string) ([]string, error) {
 		downloadUrls[j] = result.Data.Durl[0].Url
 	}
 
-	fmt.Printf("成功获取 %d 个下载链接（每个CID一个）\n", len(downloadUrls))
 	return downloadUrls, nil
 }
 
 func downloadVideo(video VideoBaseInfo, bvid string) error {
-	fmt.Println("downloadVideo is running")
 	var urls []string
 	urls, err := getDownloadUrl(video, bvid)
 	if err != nil {
@@ -171,7 +167,6 @@ func downloadVideo(video VideoBaseInfo, bvid string) error {
 		// 创建支持重定向的 HTTP 客户端
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				fmt.Printf("重定向到: %s\n", req.URL)
 				return nil
 			},
 		}
@@ -219,6 +214,7 @@ func downloadVideo(video VideoBaseInfo, bvid string) error {
 		}
 
 		fmt.Printf("文件下载成功: %s\n", filename)
+
 	}
 
 	return nil
