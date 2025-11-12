@@ -1,6 +1,6 @@
 # BVD
 
-  <img src="" alt="BVD" width="565">
+<img src="https://github.com/yingyu5658/bvd/raw/refs/heads/main/images/banner.png" alt="BVD" width="565">
 
 
 快速、高效、易用的B站视频下载工具。
