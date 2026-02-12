@@ -10,14 +10,25 @@ import (
 	"path/filepath"
 )
 
+type DownloadOptions struct {
+	OutputFile string // 单个视频下载时的输出文件名
+	OutputDir  string // 下载目标文件夹
+}
+
 type Downloader struct{}
 
 func NewDownloader() *Downloader {
 	return &Downloader{}
 }
 
-func requestSend(urls []string, video *api.VideoBaseInfo) error {
+func requestSend(urls []string, video *api.VideoBaseInfo, opts *DownloadOptions) error {
+	// 确定下载目录
 	downloadDir := "./downloads/"
+	if opts != nil && opts.OutputDir != "" {
+		downloadDir = opts.OutputDir
+	}
+
+	// 创建下载目录
 	if err := os.MkdirAll(downloadDir, 0755); err != nil {
 		return fmt.Errorf("❌ 创建下载目录失败：%w", err)
 	}
@@ -53,7 +64,14 @@ func requestSend(urls []string, video *api.VideoBaseInfo) error {
 		}
 
 		// 构建文件名
-		filename := filepath.Join(downloadDir, video.Data[i].Part+".mp4")
+		var filename string
+		if opts != nil && opts.OutputFile != "" {
+			// 使用用户指定的文件名
+			filename = filepath.Join(downloadDir, opts.OutputFile+".mp4")
+		} else {
+			// 使用视频分P名称作为文件名
+			filename = filepath.Join(downloadDir, video.Data[i].Part+".mp4")
+		}
 		fmt.Printf("✅ 保存到: %s\n", filename)
 
 		// 创建文件
@@ -81,7 +99,7 @@ func requestSend(urls []string, video *api.VideoBaseInfo) error {
 	return nil
 }
 
-func (d *Downloader) Start(bvid string, apiClient *api.BiliAPI) error {
+func (d *Downloader) Start(bvid string, apiClient *api.BiliAPI, opts *DownloadOptions) error {
 	fmt.Println("✅ 获取到 BV 号:", bvid)
 
 	videoInfo, err := apiClient.GetVideoInfo(bvid)
@@ -103,9 +121,18 @@ func (d *Downloader) Start(bvid string, apiClient *api.BiliAPI) error {
 	for j, cid := range cids {
 		apiUrl := fmt.Sprintf("https://api.bilibili.com/x/player/playurl?&cid=%d&bvid=%s&qn=80", cid, bvid)
 
-		resp, err := apiClient.Client.Get(apiUrl)
+		req, err := http.NewRequest("GET", apiUrl, nil)
 		if err != nil {
-			return fmt.Errorf("❌ CID %d 请求 请求失败: %w", cid, err)
+			return fmt.Errorf("❌ CID %d 创建请求失败: %w", cid, err)
+		}
+
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+		req.Header.Set("Referer", fmt.Sprintf("https://www.bilibili.com/video/%s", bvid))
+
+		resp, err := apiClient.Client.Do(req)
+		
+		if err != nil {
+			return fmt.Errorf("❌ CID %d 请求失败: %w", cid, err)
 		}
 
 		body, err := io.ReadAll(resp.Body)
@@ -135,7 +162,7 @@ func (d *Downloader) Start(bvid string, apiClient *api.BiliAPI) error {
 
 	fmt.Println("✅ 获取到所有下载链接")
 
-	requestSend(downloadUrls, videoInfo)
+	requestSend(downloadUrls, videoInfo, opts)
 
 	return nil
 }
