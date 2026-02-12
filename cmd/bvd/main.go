@@ -19,16 +19,36 @@ func main() {
 			{
 				Name:  "download",
 				Usage: "下载指定 BV 号的视频",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "指定单个视频下载时的输出文件名（不含扩展名）",
+					},
+					&cli.StringFlag{
+						Name:    "director",
+						Aliases: []string{"d"},
+						Usage:   "指定下载目标文件夹（不存在时会自动创建）",
+					},
+				},
 				Action: func(c *cli.Context) error {
 					bvid := c.Args().First()
 					if bvid == "" {
 						return fmt.Errorf("请提供视频 BV 号")
 					}
 
-					biliAPI := api.NewBiliAPI()
-					downloader := downloader.NewDownloader()
+					outputFile := c.String("file")
+					outputDir := c.String("director")
+					// fmt.Printf("Debug: outputFile=%s, outputDir=%s\n", outputFile, outputDir)
 
-					return downloader.Start(bvid, biliAPI)
+					biliAPI := api.NewBiliAPI()
+					dl := downloader.NewDownloader()
+					opts := &downloader.DownloadOptions{
+						OutputFile: outputFile,
+						OutputDir:  outputDir,
+					}
+
+					return dl.Start(bvid, biliAPI, opts)
 				},
 				ArgsUsage: "<BVID> 欲下载视频的 BV 号",
 			},
